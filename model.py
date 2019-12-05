@@ -27,9 +27,11 @@ stopWords.remove('not')
 stem_obj = PorterStemmer()
 lem_obj = WordNetLemmatizer()
 
-#Text Preprocessing
+
 corpus = []
 
+#Text Preprocessing including stemming
+'''
 for i in range(0,len(df_reviews)):
     review = re.sub('[^a-zA-Z]',' ',df_reviews.iloc[i,0]) #remove all characters except A-Z
     review = review.lower().split() #convert all text into lower case and split by space
@@ -40,19 +42,37 @@ for i in range(0,len(df_reviews)):
                      if word not in stopWords]
     review_updated = ' '.join(review_updated)
     corpus.append(review_updated)
-
+'''
+    
+    
+#Text Preprocessing without stemming    
+for i in range(0,len(df_reviews)):
+    review = re.sub('[^a-zA-Z]',' ',df_reviews.iloc[i,0]) #remove all characters except A-Z
+    review = review.lower().split() #convert all text into lower case and split by space
+    
+    #Apply stemming and lemmatization of all words in review
+    review_updated = [lem_obj.lemmatize(lem_obj.lemmatize(word,pos='v'),pos='a')\
+                     for word in review\
+                     if word not in stopWords]
+    review_updated = ' '.join(review_updated)
+    corpus.append(review_updated)
     
     
 #initiliaze Countvecorizer
-countVector = CountVectorizer(max_features=1500)
+countVector = CountVectorizer(max_features=2000)
 
 #Save the Count Vector as tranform.pkl file 
 #which will be used to convert text into count vector
 pickle.dump(countVector,open('transform.pkl','wb'))
 
 X = countVector.fit_transform(corpus).toarray()
+
+#Save the vocabulary in form of words
+words = countVector.get_feature_names()
+pickle.dump(words,open('vocabulary.pkl','wb'))
+
 #X = countVector.fit_transform(corpus)
-y = df_reviews_subset.iloc[:,1].values
+y = df_reviews.iloc[:,1].values
 
 #split the dataset into train and test
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=42) 
